@@ -1,0 +1,10 @@
+[package]
+name = "pool"
+version = "0.1.0"
+authors = ["Alex Sarapulov <1molyee@gmail.com>"]
+edition = "2018"
+publish = false
+
+[dependencies]
+builder = { path = "../builder" }
+shared = { path = "../shared" }

@@ -1,0 +1,9 @@
+[package]
+name = "timer"
+version = "0.1.0"
+authors = ["Alex Sarapulov <1molyee@gmail.com>"]
+edition = "2018"
+publish = false
+
+[dependencies]
+shared = { path = "../shared" }
