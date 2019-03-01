@@ -7,11 +7,13 @@ pub fn new() -> impl Uuid {
     UuidV1::new()
 }
 
-impl Uuid for UuidV1 {
-    fn new() -> Self {
-        UuidV1(uuid::Uuid::new_v4())
+impl UuidV1 {
+    pub(crate) fn new() -> Self {
+        UuidV1(uuid::Uuid::new_v1())
     }
+}
 
+impl Uuid for UuidV1 {
     fn version(&self) -> Version {
         Version::MAC
     }

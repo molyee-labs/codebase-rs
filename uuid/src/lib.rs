@@ -21,9 +21,12 @@ pub enum Variant {
 }
 
 pub trait Uuid: Sized + Clone + Copy + Eq + Send + Eq + PartialEq + Hash + Ord {
-    fn new() -> Self;
-    fn version(&self) -> Version;
-    fn variant(&self) -> Variant;
+    fn version(&self) -> Version {
+        Version::NIL
+    }
+    fn variant(&self) -> Variant {
+        Variant::Future
+    }
 }
 
 #[cfg(feature = "v1")]

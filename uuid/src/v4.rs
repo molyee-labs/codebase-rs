@@ -12,8 +12,8 @@ pub fn new() -> impl Uuid {
     UuidV4::new()
 }
 
-impl Uuid for UuidV4 {
-    fn new() -> Self {
+impl UuidV4 {
+    pub(crate) fn new() -> Self {
         let mut rng = rand::thread_rng();
         let mut bytes = [0u8; 16];
         rng.fill_bytes(bytes.as_mut());
@@ -21,11 +21,12 @@ impl Uuid for UuidV4 {
         let data = raw & RANDOM_MASK | VERSION_AND_VARIANT_BITS;
         UuidV4(data)
     }
+}
 
+impl Uuid for UuidV4 {
     fn version(&self) -> Version {
         Version::RANDOM
     }
-
     fn variant(&self) -> Variant {
         Variant::RFC4122
     }
