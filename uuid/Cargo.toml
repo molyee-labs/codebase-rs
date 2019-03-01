@@ -1,0 +1,15 @@
+[package]
+name = "uuid"
+version = "0.1.0"
+authors = ["Alex Sarapulov <1molyee@gmail.com>"]
+edition = "2018"
+publish = false
+
+[features]
+default = ["v4"]
+v1 = ["uuid/v1"]
+v4 = ["uuid/v4", "rand"]
+
+[dependencies]
+uuid = { version = "*", features = ["v1", "v4"], optional = true }
+rand = { version = "*", optional = true }
