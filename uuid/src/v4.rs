@@ -1,8 +1,9 @@
 use super::*;
+use std::fmt;
 use rand::RngCore;
 
-const VERSION_AND_VARIANT_BITS : u128 = 0x4u128 << 68 | 0x80u128 << 56;
-const RANDOM_MASK : u128 = 0xffffffffffffff0f3fffffffffffffff;
+const VERSION_AND_VARIANT_BITS : u128 = 0x40u128 << 72 | 0x80u128 << 56;
+const RANDOM_MASK : u128 = 0xffffffffffff0fff3fffffffffffffff;
 
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct UuidV4(u128);
@@ -30,24 +31,36 @@ impl Uuid for UuidV4 {
     }
 }
 
+impl fmt::Debug for UuidV4 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Uuid'{:#x?}'", &self.0)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn generate_uuids() -> Vec<UuidV4> {
         let mut arr = vec![];
+        arr.push(UuidV4(0x434511c9932b4b58a0f9cedf28d44a35u128));
+        arr.push(UuidV4(0xb8a6077771f64ba09216fd6059395cf9u128));
+        arr.push(UuidV4(0x550e8400e29b41d4a716446655440000u128));
+        arr.push(UuidV4(0x67e5504410b1426f9247bb680e5fe0c8u128));
         for _ in 0..10 {
             arr.push(UuidV4::new());
         }
-        arr.push(UuidV4(0x550e8400e29b41d4a716446655440000u128));
-        arr.push(UuidV4(0x67e5504410b1426f9247bb680e5fe0c8u128));
         arr
     }
 
     #[test]
     fn check_variant() {
         for &uuid in generate_uuids().iter() {
-            assert_eq!(uuid.0.to_ne_bytes()[8] >> 6, 0b10u8);
+            // 10x high 2 bits of 8 octet
+            let byte = uuid.0.to_be_bytes()[8];
+            assert_eq!(byte >> 6, 2u8,
+                "{:?} wrong variant in 2 most significant bits of 8 octet {:#x?} 'clk_seq_hi_res' field",
+                uuid, byte);
             assert_eq!(uuid.variant(), Variant::RFC4122);
         }
     }
@@ -55,7 +68,11 @@ mod tests {
     #[test]
     fn check_version() {
         for &uuid in generate_uuids().iter() {
-            assert_eq!(uuid.0.to_ne_bytes()[7] >> 4, 0b0100u8);
+            // 0100 high 4 bits of 6 octet
+            let byte = uuid.0.to_be_bytes()[6];
+            assert_eq!(byte >> 4, 0x4u8,
+                "{:?} wrong version in 4 most significant bits of 6 octet {:#x?} 'time_hi_and_version' field",
+                uuid, byte);
             assert_eq!(uuid.version(), Version::RANDOM);
         }
     }
