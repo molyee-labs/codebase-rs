@@ -1,9 +1,9 @@
 use super::*;
-use std::fmt;
 use rand::RngCore;
+use std::fmt;
 
-const VERSION_AND_VARIANT_BITS : u128 = 0x40u128 << 72 | 0x80u128 << 56;
-const RANDOM_MASK : u128 = 0xffffffffffff0fff3fffffffffffffff;
+const VERSION_AND_VARIANT_BITS: u128 = 0x40u128 << 72 | 0x80u128 << 56;
+const RANDOM_MASK: u128 = 0xffffffffffff0fff3fffffffffffffff;
 
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct UuidV4(u128);

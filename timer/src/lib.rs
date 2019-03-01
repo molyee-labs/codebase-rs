@@ -1,5 +1,5 @@
-use std::time::{Instant, Duration};
 use shared::Link;
+use std::time::{Duration, Instant};
 
 pub struct SyncTimer(Link<Instant>);
 

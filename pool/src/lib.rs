@@ -1,7 +1,7 @@
 use builder::*;
+use shared::LinkMut;
 use std::mem::ManuallyDrop;
 use std::ptr;
-use shared::LinkMut;
 
 pub enum Error {
     LimitExceeded,

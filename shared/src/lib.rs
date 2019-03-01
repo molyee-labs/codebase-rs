@@ -1,5 +1,5 @@
-use std::sync::{Arc, Mutex, MutexGuard};
 use std::cell::{RefCell, UnsafeCell};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 #[derive(Default)]
 pub struct Ptr<T: ?Sized>(Arc<UnsafeCell<T>>);

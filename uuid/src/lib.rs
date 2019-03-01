@@ -20,7 +20,7 @@ pub enum Variant {
     Future,
 }
 
-pub trait Uuid : Sized + Clone + Copy + Eq + Send + Eq + PartialEq + Hash + Ord {
+pub trait Uuid: Sized + Clone + Copy + Eq + Send + Eq + PartialEq + Hash + Ord {
     fn new() -> Self;
     fn version(&self) -> Version;
     fn variant(&self) -> Variant;
