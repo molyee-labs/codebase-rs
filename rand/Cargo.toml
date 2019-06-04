@@ -3,5 +3,19 @@ name = "rand"
 version = "0.1.0"
 authors = ["Alex Sarapulov <1molyee@gmail.com>"]
 edition = "2018"
+publish = false
+
+[features]
+pcg = ["rand_pcg"]
+hc = ["rand_hc"]
+chacha = ["rand_chacha"]
+pcg64 = ["pcg"]
+pcg128 = ["pcg"]
+hc128 = ["hc"]
+chacha20 = ["chacha"]
 
 [dependencies]
+rand_core = { version = "*" }
+rand_pcg = { version = "*", optional = true }
+rand_hc = { version = "*", optional = true }
+rand_chacha = { version = "*", optional = true }
