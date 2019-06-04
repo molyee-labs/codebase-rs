@@ -1,6 +1,7 @@
 use super::*;
-use rand::RngCore;
 use std::fmt;
+use rand::core::RngCore;
+use rand::pcg::Mcg128Xsl64 as Pcg64;
 
 const VERSION_AND_VARIANT_BITS: u128 = 0x40u128 << 72 | 0x80u128 << 56;
 const RANDOM_MASK: u128 = 0xffffffffffff0fff3fffffffffffffff;
@@ -14,12 +15,19 @@ pub fn new() -> impl Uuid {
 
 impl UuidV4 {
     pub(crate) fn new() -> Self {
-        let mut rng = rand::thread_rng();
+        // TODO fast, true & secure random 128 bit state without deps on OS
+        // maybe we need to:
+        // ? use Jitter or ChaChaRng as seeder
+        //      (to initialize/update seed with some fast CSPRNG),
+        // ? use .from_seed() instead of .new()
+        // ? use Xoshiro256** as fast PRNG
+        // ? mind about streaming options in some RNGs (ChaChaX as example)
+        let state = 0u128;
+        let mut rng = Pcg64::new(state);
         let mut bytes = [0u8; 16];
         rng.fill_bytes(bytes.as_mut());
-        let raw = u128::from_ne_bytes(bytes);
-        let data = raw & RANDOM_MASK | VERSION_AND_VARIANT_BITS;
-        UuidV4(data)
+        let random = u128::from_ne_bytes(bytes);
+        UuidV4(random & RANDOM_MASK | VERSION_AND_VARIANT_BITS)
     }
 }
 
@@ -27,6 +35,7 @@ impl Uuid for UuidV4 {
     fn version(&self) -> Version {
         Version::RANDOM
     }
+
     fn variant(&self) -> Variant {
         Variant::RFC4122
     }

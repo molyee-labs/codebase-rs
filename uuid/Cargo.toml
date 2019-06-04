@@ -7,9 +7,11 @@ publish = false
 
 [features]
 default = ["v4"]
-v1 = ["uuid/v1"]
-v4 = ["uuid/v4", "rand"]
+v1 = []
+v4 = ["rand/pcg128"]
+
+[target.'cfg(feature = "v4")'.dependencies]
+rand = { path = "../rand", features = ["pcg128"], optional = true }
 
 [dependencies]
-uuid = { version = "*", features = ["v1", "v4"], optional = true }
-rand = { version = "*", optional = true }
+rand = { path = "../rand", optional = true }

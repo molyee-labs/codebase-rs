@@ -1,7 +1,7 @@
 use super::*;
 
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct UuidV1(uuid::Uuid);
+pub struct UuidV1(u128);
 
 pub fn new() -> impl Uuid {
     UuidV1::new()
@@ -9,7 +9,7 @@ pub fn new() -> impl Uuid {
 
 impl UuidV1 {
     pub(crate) fn new() -> Self {
-        UuidV1(uuid::Uuid::new_v1())
+        unimplemented!()
     }
 }
 
