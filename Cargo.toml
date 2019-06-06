@@ -1,3 +1,3 @@
 [workspace]
 
-members = ["builder", "pool", "shared", "timer", "uuid", "merge", "merge_derive"]
+members = ["builder", "pool", "shared", "convert", "timer", "uuid", "merge", "merge_derive"]
