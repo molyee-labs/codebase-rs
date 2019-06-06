@@ -1,8 +1,8 @@
-use super::{Uuid, Version, Variant};
-use std::fmt;
+use super::{Uuid, Variant, Version};
 use convert::*;
 use rand::core::RngCore;
 use rand::pcg::Mcg128Xsl64 as Pcg64;
+use std::fmt;
 
 #[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct UuidV4([u8; 16]);
@@ -72,7 +72,7 @@ mod tests {
         }
         arr
     }
-    
+
     #[test]
     fn check_struct_size() {
         use std::mem::size_of_val;
@@ -89,9 +89,11 @@ mod tests {
         for (i, uuid) in generate_uuids().iter().take(count).enumerate() {
             let bytes = uuid.bytes();
             let origin: [u8; 16] = UUID_V4[i].to_be().transmute();
-            assert_eq!(bytes, origin,
+            assert_eq!(
+                bytes, origin,
                 "{:?} vs {:?} wrong bytes ordering",
-                bytes, origin);
+                bytes, origin
+            );
         }
     }
 

@@ -8,8 +8,7 @@ use syn::{parse_macro_input, parse_quote};
 use syn::{Data, DeriveInput, Fields, GenericParam, Generics, Index};
 
 #[proc_macro_derive(Mix)]
-pub fn expand_derive_mix(input: TokenStream) -> TokenStream { 
-    
+pub fn expand_derive_mix(input: TokenStream) -> TokenStream {
     let input = TokenStream::from(input);
     let input = parse_macro_input!(input as syn::DeriveInput);
     // Used in the quasi-quotation below as `#name`.
@@ -33,7 +32,6 @@ pub fn expand_derive_mix(input: TokenStream) -> TokenStream {
     };
 
     TokenStream::from(expanded)
-
 }
 
 fn add_trait_bounds(mut generics: Generics) -> Generics {
@@ -47,35 +45,31 @@ fn add_trait_bounds(mut generics: Generics) -> Generics {
 
 fn merge_fields(data: &Data) -> proc_macro2::TokenStream {
     match *data {
-        syn::Data::Struct(ref data) => {
-            match data.fields {
-                Fields::Named(ref fields) => {
-                    let recurse = fields.named.iter().map(|f| {
-                        let name = &f.ident;
-                        quote_spanned! {f.span()=>
-                            #name: merge::Mix::mix(&self.#name, other.#name)
-                        }
-                    });
-                    quote! {
-                        #(#recurse,)*
+        syn::Data::Struct(ref data) => match data.fields {
+            Fields::Named(ref fields) => {
+                let recurse = fields.named.iter().map(|f| {
+                    let name = &f.ident;
+                    quote_spanned! {f.span()=>
+                        #name: merge::Mix::mix(&self.#name, other.#name)
                     }
-                }
-                Fields::Unnamed(ref fields) => {
-                    let recurse = fields.unnamed.iter().enumerate().map(|(i, f)| {
-                        let index = Index::from(i);
-                        quote_spanned! {f.span()=>
-                            merge::Mix::mix(&self.#index, other.#index)
-                        }
-                    });
-                    quote! {
-                        #(#recurse,)*
-                    }
-                }
-                Fields::Unit => {
-                    quote!()
+                });
+                quote! {
+                    #(#recurse,)*
                 }
             }
-        }
+            Fields::Unnamed(ref fields) => {
+                let recurse = fields.unnamed.iter().enumerate().map(|(i, f)| {
+                    let index = Index::from(i);
+                    quote_spanned! {f.span()=>
+                        merge::Mix::mix(&self.#index, other.#index)
+                    }
+                });
+                quote! {
+                    #(#recurse,)*
+                }
+            }
+            Fields::Unit => quote!(),
+        },
         Data::Enum(_) | Data::Union(_) => unimplemented!(),
     }
 }

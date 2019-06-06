@@ -1,6 +1,6 @@
-#[cfg(feature="integer")]
+#[cfg(feature = "integer")]
 pub mod integer;
-#[cfg(feature="integer")]
+#[cfg(feature = "integer")]
 pub use integer::*;
 
 pub trait Transmute<T> {

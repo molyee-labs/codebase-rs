@@ -1,6 +1,6 @@
 use super::{impl_transmute, Transmute};
 
-use std::mem as mem;
+use std::mem;
 
 impl_transmute!(u128, [u8; 16]);
 impl_transmute!(u64, [u8; 8]);

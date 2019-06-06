@@ -13,7 +13,7 @@ pub struct UuidV1([u8; 16]);
 pub struct Time {
     hi: [u8; 2],
     mid: [u8; 2],
-    low: [u8; 4]
+    low: [u8; 4],
 }
 
 impl_transmute!(u64, Time);
@@ -52,7 +52,7 @@ impl From<u16> for ClockSequence {
     }
 }
 
-pub trait Context : Sync {
+pub trait Context: Sync {
     fn next(&self) -> (Time, ClockSequence);
     fn node(&self) -> NodeId;
 }
@@ -62,7 +62,7 @@ struct Inner {
     time_mid: [u8; 2],
     time_hi_and_version: [u8; 2],
     clk_seq: ClockSequence,
-    node: NodeId
+    node: NodeId,
 }
 
 impl_transmute!(Inner, [u8; 16]);
@@ -80,7 +80,13 @@ impl<T: Context> From<&T> for UuidV1 {
         let mut time_hi_and_version = time.hi;
         time_hi_and_version[0] = time.hi[0] & 0x0fu8 | 0x10u8;
         let node = context.node();
-        let inner = Inner { time_low, time_mid, time_hi_and_version, clk_seq, node };
+        let inner = Inner {
+            time_low,
+            time_mid,
+            time_hi_and_version,
+            clk_seq,
+            node,
+        };
         UuidV1(inner.transmute())
     }
 }
@@ -120,14 +126,14 @@ impl UuidV1 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::atomic::{ AtomicUsize, Ordering };
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     struct Data {
         uuid: u128,
         seconds: u64,
         nanos: u32,
         node: [u8; 6],
-        count: u16
+        count: u16,
     }
 
     const DATA: &[Data] = &[
@@ -151,13 +157,18 @@ mod tests {
         seconds: u64,
         nanos: u32,
         node: [u8; 6],
-        count: AtomicUsize
+        count: AtomicUsize,
     }
 
     impl MockCounterContext {
         fn new(seconds: u64, nanos: u32, node: [u8; 6], count: u16) -> Self {
             let count = AtomicUsize::new(count as usize);
-            MockCounterContext { seconds, nanos, node, count }
+            MockCounterContext {
+                seconds,
+                nanos,
+                node,
+                count,
+            }
         }
     }
 
@@ -218,7 +229,7 @@ mod tests {
             assert_eq!(bytes, origin, "wrong bytes ordering");
         }
     }
-    
+
     #[test]
     fn check_variant() {
         for uuid in generate_uuids().iter() {
