@@ -1,18 +1,17 @@
-use super::{Uuid, Variant, Version};
+use super::{Specs, Uuid, Variant, Version};
 use convert::*;
 use rand::core::RngCore;
 use rand::pcg::Mcg128Xsl64 as Pcg64;
 use std::fmt;
 
-#[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct UuidV4([u8; 16]);
+struct Internal([u8; 16]);
 
-pub fn new() -> UuidV4 {
-    UuidV4::new()
+pub fn new() -> Uuid {
+    Uuid(Internal::new().transmute())
 }
 
-impl UuidV4 {
-    pub fn new() -> Self {
+impl Internal {
+    pub(crate) fn new() -> Self {
         // TODO fast, true & secure random 128 bit state without deps on OS
         // maybe we need to:
         // ? use Jitter or ChaChaRng as seeder
@@ -24,17 +23,16 @@ impl UuidV4 {
         let mut rng = Pcg64::new(state);
         let mut bytes = [0u8; 16];
         rng.fill_bytes(bytes.as_mut());
-        bytes[6] = (bytes[6] & 0x0fu8) | 0x40u8;
+        bytes[6] = bytes[6] & 0x0fu8 | 0x40u8;
         bytes[8] = bytes[8] & 0x3fu8 | 0x80u8;
-        UuidV4(bytes)
+        Internal(bytes)
     }
 }
 
-impl Uuid for UuidV4 {
-    fn bytes(&self) -> [u8; 16] {
-        self.0
-    }
+impl_transmute!([u8; 16], Internal);
+impl_transmute!(Internal, [u8; 16]);
 
+impl Specs for Internal {
     fn version(&self) -> Version {
         Version::RANDOM
     }
@@ -44,7 +42,7 @@ impl Uuid for UuidV4 {
     }
 }
 
-impl fmt::Debug for UuidV4 {
+impl fmt::Debug for Internal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Uuid'{:#x?}'", &self.0)
     }
@@ -54,21 +52,21 @@ impl fmt::Debug for UuidV4 {
 mod tests {
     use super::*;
 
-    const UUID_V4: &[u128] = &[
+    const UUIDS: &[u128] = &[
         0x434511c9932b4b58a0f9cedf28d44a35u128,
         0xb8a6077771f64ba09216fd6059395cf9u128,
         0x550e8400e29b41d4a716446655440000u128,
         0x67e5504410b1426f9247bb680e5fe0c8u128,
     ];
 
-    fn generate_uuids() -> Vec<UuidV4> {
+    fn generate_uuids() -> Vec<Uuid> {
         let mut arr = vec![];
-        for uuid in UUID_V4 {
+        for uuid in UUIDS {
             let uuid = (*uuid).to_be().transmute();
-            arr.push(UuidV4(uuid));
+            arr.push(Uuid(uuid));
         }
         for _ in 0..10 {
-            arr.push(UuidV4::new());
+            arr.push(new());
         }
         arr
     }
@@ -85,10 +83,10 @@ mod tests {
 
     #[test]
     fn check_bytes_ordering() {
-        let count = UUID_V4.len();
+        let count = UUIDS.len();
         for (i, uuid) in generate_uuids().iter().take(count).enumerate() {
             let bytes = uuid.bytes();
-            let origin: [u8; 16] = UUID_V4[i].to_be().transmute();
+            let origin: [u8; 16] = UUIDS[i].to_be().transmute();
             assert_eq!(
                 bytes, origin,
                 "{:?} vs {:?} wrong bytes ordering",

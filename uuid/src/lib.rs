@@ -1,4 +1,4 @@
-use std::hash::Hash;
+use convert::*;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
@@ -11,6 +11,9 @@ pub enum Version {
     SHA1,
 }
 
+impl_transmute!(u8, Version);
+impl_transmute!(u8, Variant);
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
 pub enum Variant {
@@ -20,15 +23,38 @@ pub enum Variant {
     Future,
 }
 
-pub trait Uuid: Sized + Clone + Eq + Send + Eq + PartialEq + Hash + Ord {
-    fn bytes(&self) -> [u8; 16];
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub struct Uuid([u8; 16]);
 
+impl Uuid {
+    pub fn bytes(&self) -> [u8; 16] {
+        self.0
+    }
+}
+
+pub trait Specs {
+    fn version(&self) -> Version;
+    fn variant(&self) -> Variant;
+}
+
+impl Specs for Uuid {
     fn version(&self) -> Version {
-        Version::NIL
+        let version: u8 = self.0[6] >> 4;
+        if version > 5u8 {
+            Version::NIL
+        } else {
+            version.transmute()
+        }
     }
 
     fn variant(&self) -> Variant {
-        Variant::Future
+        let variant: u8 = self.0[8] >> 5;
+        match variant {
+            6 => Variant::Microsoft,
+            7 => Variant::Future,
+            4 | 5 => Variant::RFC4122,
+            _ => Variant::NCS,
+        }
     }
 }
 

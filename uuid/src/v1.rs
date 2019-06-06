@@ -1,13 +1,9 @@
-use super::*;
+use super::{Specs, Uuid, Variant, Version};
 use convert::*;
-use std::mem;
 
 // The number of 100 ns ticks between the UUID epoch
 // `1582-10-15 00:00:00` and the Unix epoch `1970-01-01 00:00:00`.
 const UUID_TICKS_BETWEEN_EPOCHS: u64 = 0x01b21dd213814000u64;
-
-#[derive(Debug, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct UuidV1([u8; 16]);
 
 #[derive(Default)]
 pub struct Time {
@@ -36,6 +32,7 @@ impl From<[u8; 6]> for NodeId {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Default)]
 pub struct ClockSequence {
     hi_res: u8,
@@ -57,7 +54,8 @@ pub trait Context: Sync {
     fn node(&self) -> NodeId;
 }
 
-struct Inner {
+#[allow(dead_code)]
+struct Internal {
     time_low: [u8; 4],
     time_mid: [u8; 2],
     time_hi_and_version: [u8; 2],
@@ -65,14 +63,14 @@ struct Inner {
     node: NodeId,
 }
 
-impl_transmute!(Inner, [u8; 16]);
-impl_transmute!([u8; 16], Inner);
+impl_transmute!(Internal, [u8; 16]);
+impl_transmute!([u8; 16], Internal);
 
-pub fn new<T: Context>(context: &T) -> impl Uuid {
-    UuidV1::from(context)
+pub fn new<T: Context>(context: &T) -> Uuid {
+    Uuid(Internal::from(context).transmute())
 }
 
-impl<T: Context> From<&T> for UuidV1 {
+impl<T: Context> From<&T> for Internal {
     fn from(context: &T) -> Self {
         let (time, clk_seq) = context.next();
         let time_low = time.low;
@@ -80,22 +78,17 @@ impl<T: Context> From<&T> for UuidV1 {
         let mut time_hi_and_version = time.hi;
         time_hi_and_version[0] = time.hi[0] & 0x0fu8 | 0x10u8;
         let node = context.node();
-        let inner = Inner {
+        Internal {
             time_low,
             time_mid,
             time_hi_and_version,
             clk_seq,
             node,
-        };
-        UuidV1(inner.transmute())
+        }
     }
 }
 
-impl Uuid for UuidV1 {
-    fn bytes(&self) -> [u8; 16] {
-        self.0
-    }
-
+impl Specs for Internal {
     fn version(&self) -> Version {
         Version::MAC
     }
@@ -105,28 +98,24 @@ impl Uuid for UuidV1 {
     }
 }
 
-impl UuidV1 {
-    fn inner(&self) -> Inner {
-        self.0.transmute()
-    }
-
-    fn time(&self) -> u64 {
-        let inner = self.inner();
-        let mut time_hi = inner.time_hi_and_version;
-        time_hi[0] &= 0x3fu8;
-        let time = (time_hi, inner.time_mid, inner.time_low);
-        unsafe { mem::transmute(time) }
-    }
-
-    fn node(&self) -> [u8; 6] {
-        self.inner().node.0
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
+
+    impl Internal {
+        fn time(&self) -> u64 {
+            let mut time_hi = self.time_hi_and_version;
+            time_hi[0] &= 0x0fu8;
+            let time = (time_hi, self.time_mid, self.time_low);
+            let time = unsafe { std::mem::transmute(time) }; // TODO
+            u64::from_be_bytes(time)
+        }
+
+        fn node(&self) -> [u8; 6] {
+            self.node.0
+        }
+    }
 
     struct Data {
         uuid: u128,
@@ -185,11 +174,11 @@ mod tests {
         }
     }
 
-    fn generate_uuids() -> Vec<UuidV1> {
+    fn generate_uuids() -> Vec<Uuid> {
         let mut arr = vec![];
         for i in DATA {
             let context = MockCounterContext::new(i.seconds, i.nanos, i.node, i.count);
-            arr.push(UuidV1::from(&context));
+            arr.push(new(&context));
         }
         arr
     }
@@ -197,6 +186,7 @@ mod tests {
     #[test]
     fn check_node_id() {
         for (i, uuid) in generate_uuids().iter().enumerate() {
+            let uuid: Internal = uuid.0.transmute();
             let node = uuid.node();
             let origin = DATA[i].node;
             assert_eq!(node, origin, "wrong node id");
@@ -206,8 +196,9 @@ mod tests {
     #[test]
     fn check_times() {
         for (i, uuid) in generate_uuids().iter().enumerate() {
+            let uuid: Internal = uuid.0.transmute();
             let time = uuid.time() - UUID_TICKS_BETWEEN_EPOCHS;
-            let origin = DATA[i].seconds * 10000000 + (DATA[i].nanos as u64) / 100;
+            let origin = DATA[i].seconds * 10000000 + (DATA[i].nanos as u64 / 100u64);
             assert_eq!(time, origin);
         }
     }
@@ -234,7 +225,7 @@ mod tests {
     fn check_variant() {
         for uuid in generate_uuids().iter() {
             // 10x high 2 bits of 8 octet
-            let byte = uuid.bytes()[8];
+            let byte = uuid.0[8];
             assert_eq!(byte >> 6, 2u8,
                 "{:?} wrong variant in 2 most significant bits of 8 octet {:#x?} 'clk_seq_hi_res' field",
                 uuid, byte);
@@ -246,7 +237,7 @@ mod tests {
     fn check_version() {
         for uuid in generate_uuids().iter() {
             // 0100 high 4 bits of 6 octet
-            let byte = uuid.bytes()[6];
+            let byte = uuid.0[6];
             assert_eq!(byte & 0xf0u8, 0x10u8,
                 "{:?} wrong version in 4 most significant bits of 6 octet {:#x?} 'time_hi_and_version' field",
                 uuid, byte);
