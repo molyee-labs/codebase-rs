@@ -6,7 +6,7 @@ edition = "2018"
 publish = false
 
 [features]
-default = ["v4"]
+default = ["v1", "v4"]
 v1 = []
 v4 = ["rand/pcg128"]
 
@@ -15,3 +15,4 @@ rand = { path = "../rand", features = ["pcg128"], optional = true }
 
 [dependencies]
 rand = { path = "../rand", optional = true }
+convert = { path = "../convert" }
