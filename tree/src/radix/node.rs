@@ -1,26 +1,27 @@
 use std::marker::PhantomData;
 use std::io::{Bytes, Cursor, SeekFrom};
 use std::sync::atomic::{AtomicPtr, Ordering};
-use std::mem::{size_of, size_of_val, transmute};
-use std::cell::RefCell;
-
-pub struct Trie<T> {
-    root: Node<T>,
-    len: usize,
-}
+use std::mem::{size_of, size_of_val, transmute, forget};
+use std::alloc::{alloc, dealloc, Layout};
 
 bitflags! {
-    struct Has: u8 {
-        const Value = 1;
-        const Child = 2;
-        const Neighbor = 4;
+    pub(crate) struct Flag: u8 {
+        const VALUE = 1;
+        const CHILD = 2;
+        const NEIGHBOR = 4;
     }
 }
+
+const FLAGS_BITS: usize = 3; // number of flags
+const FLAGS_SHIFT: usize = 8 - FLAGS_BITS;
+const MAX_LABEL_LEN: usize = 2 ^ FLAGS_SHIFT - 1;
+const LABEL_LEN_MASK: u8 = MAX_LABEL_LEN as u8;
+const ALLOC_ALIGN: usize = 1;
 
 pub struct Node<T> {
     // 3bits - flags
     // 5bits - label length
-    // [u8; label_len] - label 32 symbols
+    // [u8; label_len] - label max 31 symbols
     // ~ [u8, sizeof(Node)] - neighbor node
     // ~ [u8, sizeof(Node)] - child node
     // ~ [u8, sizeof(T)] - data (value)
@@ -28,48 +29,107 @@ pub struct Node<T> {
     _val: PhantomData<T>,
 }
 
-pub struct Info<'a, T> {
-    flags: Has,
-    label: Bytes,
-    value: Option(T),
-    neighbor: Option<Node>,
-    child: Option<Node>,
-}
-
-impl Info<T> {
-    fn new(flags: Has, label: Bytes) -> Self {
-        Info { flags, label, neighbor: None, child: None }
+impl Flag {
+    #[inline]
+    pub(crate) fn calc_node_size<T>(&self) -> usize {
+        let mut size = 1usize;
+        if self.contains(Flag::NEIGHBOR) {
+            size += size_of::<Node<T>>();
+        }
+        if self.contains(Flag::CHILD) {
+            size += size_of::<Node<T>>();
+        }
+        if self.contains(Flag::VALUE) {
+            size += size_of::<T>();
+        }
+        size
     }
 }
 
-pub struct Reader<T> {
-    pos: RefCell<Position>,
-    cursor: Cursor<u8>,
-    _val: PhantomData<T>,
-}
+impl<T> Node<T> {
+    pub(crate) fn new(
+        label: &[u8],
+        neighbor: Option<Node<T>>,
+        child: Option<Node<T>>,
+        value: Option<T>
+    ) -> Self {
+        let label_len = label.len();
+        assert!(label_len <= MAX_LABEL_LEN);
+        let mut flags = Flag::empty();
+        flags.set(Flag::NEIGHBOR, neighbor.is_some());
+        flags.set(Flag::CHILD, child.is_some());
+        flags.set(Flag::VALUE, value.is_some());
+        let size = flags.calc_node_size::<T>();
+        let layout = Layout::from_size_align(size, ALLOC_ALIGN).unwrap();
+        let ptr = unsafe { alloc(layout) };
+        assert!(!ptr.is_null());
 
-pub enum Position<T> {
-    Start,
-    BeforeLabel {flags: Has, label_len: u16},
-    Label {flags: Has, label: Bytes, label_len: u16},
-    BeforeNeighbor {flags: Has},
-    Neighbor {flags: Has, node: Node},
-    AfterNeighbor {flags: Has},
-    BeforeChild {flags: Has},
-    Child {flags: Has, node: Node},
-    AfterChild {flags: Has},
-    BeforeValue {flags: Has},
-    Value {flags: Has, value: T},
-    End,
-}
-
-impl Reader<T> {
-    #[inline]
-    pub fn new(ptr: *mut u8) {
-        Reader {
-            position: RefCell::new(Position::Start),
-            cursor: Cursor::new(ptr)
+        let flags_and_label_len = (flags.bits() << FLAGS_SHIFT) + (label_len as u8);
+        unsafe {
+            let pos = pointer::write_next(ptr, flags_and_label_len);
+            let pos = pointer::copy_next(label.as_ptr(), pos, label_len);
+            let pos = pointer::try_write_next(pos, neighbor);
+            let pos = pointer::try_write_next(pos, child);
+            forget(pointer::try_write_next(pos, value) as *mut u8);
         }
+        
+        let atomic = AtomicPtr::new(ptr);
+        Node { ptr: atomic, _val: Default::default() }
+    }
+
+    pub(crate) fn root() -> Self {
+        Node::new(b"", None, None, None)
+    }
+
+    pub(crate) fn as_mut_ptr(&self) -> *mut u8 {
+        self.ptr.load(Ordering::SeqCst)
+    }
+
+    pub(crate) fn open(&self) -> Reader<T> {
+        Reader::new(&self)
+    }
+
+    pub(crate) fn size(&self) -> usize {
+        self.flags().calc_node_size::<T>()
+    }
+
+    pub(crate) fn flags(&self) -> Flag {
+        let flags = unsafe { *(self.as_mut_ptr()) >> FLAGS_SHIFT };
+        Flag::from_bits(flags).unwrap()
+    }
+}
+
+impl<T> Drop for Node<T> {
+    fn drop(&mut self) {
+        let size = self.size();
+        let layout = unsafe {
+            Layout::from_size_align_unchecked(size, ALLOC_ALIGN)
+        };
+        unsafe { dealloc(self.as_mut_ptr(), layout) };
+    }
+}
+
+pub struct Reader<'a, T> {
+    node: &'a Node<T>,
+}
+
+impl<'a, T> Reader<'a, T> {
+    pub fn new(node: &'a Node<T>) -> Self {
+        Reader { node }
+    }
+
+
+}
+
+/*impl Reader<T> {
+    #[inline]
+    pub fn new(ptr: *u8) {
+        Reader { ptr }
+    }
+
+    pub fn iter(&self) -> Iter<T> {
+        let cursor = Cursor::new(self.ptr)
+        Iter { cursor }
     }
 
     pub fn info(&self) -> Info<T> {
@@ -144,11 +204,10 @@ impl Reader<T> {
         self.pos.replace(Position::Start);
         self
     }
-}
+}*/
 
-const NODE_SIZE: usize = size_of::<Node>;
 
-impl Iterator for Reader {
+/*impl Iterator for Reader {
     type Item = Position;
 
     fn next(&self) -> Option<Self::Item> {
@@ -211,11 +270,4 @@ impl Iterator for Reader {
             },
         }        
     }
-}
-
-impl Node<T> {
-    fn open(&self) -> Reader {
-        let ptr = self.ptr.load(Ordering::SeqCst);
-        Reader::new(ptr)
-    }
-}
+} */
