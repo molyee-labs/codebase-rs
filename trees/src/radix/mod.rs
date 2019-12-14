@@ -5,7 +5,7 @@
 //mod link;
 //mod trie;
 //mod map;
-mod sync;
+//mod sync;
 
 /*pub trait Node {
     type Value;

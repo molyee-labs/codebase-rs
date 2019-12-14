@@ -10,7 +10,7 @@ pub trait Build {
 #[derive(Default)]
 pub struct DefaultBuilder<T>(PhantomData<T>);
 
-pub struct FnBuilder<T>(Box<Fn() -> T>);
+pub struct FnBuilder<T>(Box<dyn Fn() -> T>);
 
 impl<F, T> From<F> for FnBuilder<T>
 where

@@ -5,7 +5,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, parse_quote};
-use syn::{Data, DeriveInput, Fields, GenericParam, Generics, Index};
+use syn::{Data, Fields, GenericParam, Generics, Index};
 
 #[proc_macro_derive(Mix)]
 pub fn expand_derive_mix(input: TokenStream) -> TokenStream {
