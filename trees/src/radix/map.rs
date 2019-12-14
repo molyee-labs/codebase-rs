@@ -1,6 +1,6 @@
 use super::node::Node;
+use super::trie::Trie;
 
 pub struct TrieMap<T> {
-    root: Node<T>,
-    len: usize,
+    inner: Trie<T>,
 }
