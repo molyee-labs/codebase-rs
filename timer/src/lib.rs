@@ -1,7 +1,7 @@
-use shared::Link;
+use shared::RcCell;
 use std::time::{Duration, Instant};
 
-pub struct SyncTimer(Link<Instant>);
+pub struct SyncTimer(RcCell<Instant>);
 
 pub trait Timer {
     fn start() -> Self;
@@ -14,10 +14,10 @@ pub fn run<T: Timer>() -> T {
 
 impl Timer for SyncTimer {
     fn start() -> Self {
-        SyncTimer(Link::from(Instant::now()))
+        Self(RcCell::new(Instant::now()))
     }
 
     fn elapsed(&self) -> Duration {
-        self.0.lock().elapsed()
+        self.0.get().elapsed()
     }
 }
