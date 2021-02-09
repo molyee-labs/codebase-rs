@@ -7,4 +7,4 @@ publish = false
 
 [dependencies]
 builder = { path = "../builder" }
-shared = { path = "../shared" }
+shared = { path = "../shared", features = ["std"] }
