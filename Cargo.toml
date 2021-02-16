@@ -11,5 +11,6 @@ members = [
     "merge",
     "aio",
     "merge_derive",
-    "dawg"
+    "dawg",
+    "collections"
 ]
