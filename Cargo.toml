@@ -10,5 +10,6 @@ members = [
     "trees",
     "merge",
     "aio",
-    "merge_derive"
+    "merge_derive",
+    "dawg"
 ]
