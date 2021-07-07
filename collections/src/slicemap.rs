@@ -1,9 +1,9 @@
 use core::cmp::Ordering;
-#[cfg(feature = "serde")]
+#[cfg(feature = "serde_derive")]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "serde_derive", derive(Deserialize, Serialize))]
 pub struct SliceMap<K, V> {
     buf: Vec<K>,
     map: Vec<(usize, V)>,
@@ -79,7 +79,8 @@ impl<K: Ord, V> SliceMap<K, V> {
     }
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default)]
+#[cfg_attr(feature = "serde_derive", derive(Deserialize, Serialize))]
 pub struct StringMap<V>(SliceMap<u8, V>);
 
 impl<V> StringMap<V> {

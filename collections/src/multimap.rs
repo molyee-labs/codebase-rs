@@ -1,18 +1,26 @@
 use crate::record::Record;
 use core::ops::Index;
 use core::ops::Range;
+#[cfg(feature = "serde_derive")]
+use serde::{Deserialize, Serialize};
 
-pub struct MultiMap<K, V> {
-    vec: Vec<Record<K, V>>
+#[derive(Debug)]
+#[cfg_attr(feature = "serde_derive", derive(Deserialize, Serialize))]
+pub struct MultiMap<K, V>(Vec<Record<K, V>>);
+
+impl<K, V> Default for MultiMap<K, V> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<K, V> MultiMap<K, V> {
-    pub fn new(vec: Vec<Record<K, V>>) -> Self {
-        Self { vec }
+    pub fn new() -> Self {
+        Self(Vec::new())
     }
 
     pub fn len(&self) -> usize {
-        self.vec.len()
+        self.0.len()
     }
 }
 
@@ -23,7 +31,7 @@ impl<'m, K: Ord, V> MultiMap<K, V> {
 
     pub fn find_all(&'m self, k: &K) -> FindAll<'m, K, V> {
         let r = self.range(k).unwrap_or(0..0);
-        let records = &self.vec[r];
+        let records = &self.0[r];
         let index = 0;
         FindAll { records, index }
     }
@@ -33,7 +41,7 @@ impl<'m, K: Ord, V> MultiMap<K, V> {
     }
 
     pub fn remove(&mut self, index: usize) -> (K, V) {
-        self.vec.remove(index).into_pair()
+        self.0.remove(index).into_pair()
     }
 
     pub fn remove_all(&mut self, k: &K) -> usize {
@@ -71,7 +79,7 @@ impl<'m, 'k, K: Ord, V> Iterator for Find<'m, 'k, K, V> {
                 self.next()
             }
             1 => {
-                let r = &self.map.vec[self.idx];
+                let r = &self.map.0[self.idx];
                 if self.key == r.key() {
                     self.idx = self.idx + 1;
                     Some(r.value())

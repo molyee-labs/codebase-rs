@@ -1,3 +1,8 @@
+#[cfg(feature = "serde_derive")]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug)]
+#[cfg_attr(feature = "serde_derive", derive(Deserialize, Serialize))]
 pub(crate) struct Record<K, V> {
     key: K,
     val: V
