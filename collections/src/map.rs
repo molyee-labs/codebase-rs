@@ -1,9 +1,9 @@
 use core::ops::{Index, IndexMut};
 use core::mem::swap;
 
-pub struct Map<K, V> {
-    inner: Vec<(K, V)>
-}
+use crate::record::Record;
+
+pub struct Map<K, V>(Vec<Record<K, V>>);
 
 impl<K, V> Default for Map<K, V> {
     fn default() -> Self {
@@ -13,16 +13,15 @@ impl<K, V> Default for Map<K, V> {
 
 impl<K, V> Map<K, V> {
     pub fn new() -> Self {
-        let inner = Vec::new();
-        Self { inner }
+        Self(Vec::new())
     }
     
     pub fn is_empty(&self) -> bool {
-        self.inner.is_empty()
+        self.0.is_empty()
     }
 
     pub fn len(&self) -> usize {
-        self.inner.len()
+        self.0.len()
     }
 }
 
@@ -30,51 +29,51 @@ impl<K, V> Index<usize> for Map<K, V> {
     type Output = V;
 
     fn index(&self, index: usize) -> &Self::Output {
-        &self.inner[index].1
+        self.0[index].value()
     }
 }
 
 impl<K, V> IndexMut<usize> for Map<K, V> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.inner[index].1
+        self.0[index].value_mut()
     }
 }
 
 impl<K: Ord, V> Map<K, V> {
     pub fn insert(&mut self, k: K, mut v: V) -> Option<V> {
-        match self.find_index(&k) {
+        match self.get_index(&k) {
             Ok(i) => { swap(&mut v, &mut self[i]); Some(v) },
-            Err(i) => { self.inner.insert(i, (k, v)); None }
+            Err(i) => { self.0.insert(i, (k, v).into()); None }
         }
     }
 
-    pub fn find(&self, k: &K) -> Option<&V> {
-        self.find_index(k).ok().map(|i| &self[i])
+    pub fn get(&self, k: &K) -> Option<&V> {
+        self.get_index(k).ok().map(|i| &self[i])
     }
 
-    pub fn find_mut(&mut self, k: &K) -> Option<&mut V> {
-        let i = self.find_index(k).ok()?;
+    pub fn get_mut(&mut self, k: &K) -> Option<&mut V> {
+        let i = self.get_index(k).ok()?;
         Some(&mut self[i])
     }
 
     pub fn get_or_create_mut<F>(&mut self, k: K, new: F) -> &mut V
     where F: FnOnce() -> V
     {
-        match self.find_index(&k) {
+        match self.get_index(&k) {
             Ok(i) => &mut self[i],
             Err(i) => {
-                self.inner.insert(i, (k, new()));
+                self.0.insert(i, (k, new()).into());
                 &mut self[i]
             }
         }
     }
 
     pub fn remove(&mut self, k: &K) -> Option<V> {
-        let i = self.find_index(k).ok()?;
-        Some(self.inner.remove(i).1)
+        let i = self.get_index(k).ok()?;
+        Some(self.0.remove(i).into_pair().1)
     }
 
-    fn find_index(&self, k: &K) -> Result<usize, usize> {
-        self.inner.binary_search_by(|(ref key, _)| k.cmp(key))
+    fn get_index(&self, k: &K) -> Result<usize, usize> {
+        self.0.binary_search_by(|r| k.cmp(r.key()))
     }
 }

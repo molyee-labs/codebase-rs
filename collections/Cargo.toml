@@ -13,3 +13,5 @@ multimap = ["serde_derive"]
 
 [dependencies]
 serde = { version = "*", features = ["derive"], optional = true }
+shared = { path = "../shared" }
+bitvec = "*"

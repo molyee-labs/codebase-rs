@@ -2,7 +2,7 @@ use shared::{Rc, RcCell, Ptr};
 use crate::map::Map;
 use core::ops::{DerefMut, Deref};
 
-trait Key: Ord { }
+pub trait Key: Ord { }
 
 impl<T: Ord> Key for T { }
 
@@ -19,32 +19,28 @@ impl<K: Key, V> Trie<K, V> {
     }
 }
 
-struct NodeRef<K, V> {
-    p: RcCell<Node<K, V>>
-}
+struct NodeRef<K, V>(RcCell<Node<K, V>>);
 
 impl<K, V> Clone for NodeRef<K, V> {
     fn clone(&self) -> Self {
-        let p = self.p.clone();
-        Self { p }
+        Self(self.0.clone())
     }
 }
 
 impl<K: Key, V> NodeRef<K, V> {
     pub fn new(node: Node<K, V>) -> Self {
-        let p = RcCell::new(node);
-        Self { p }
+        Self(RcCell::new(node))
     }
 
     pub fn insert<I>(&mut self, mut keys: I, mut v: V) -> Option<V>
     where I: Iterator<Item = K>
     {
         if let Some(k) = keys.next() {
-            self.p.get()
+            self.0.get()
                 .get_or_add_child(k)
                 .insert(keys, v)
         } else {
-            self.p.get()
+            self.0.get()
                 .set_value(v)
         }
     }
@@ -71,11 +67,11 @@ impl<K: Key, V> Node<K, V> {
     }
 
     fn child(&self, k: &K) -> Option<&NodeRef<K, V>> {
-        self.children.find(k)
+        self.children.get(k)
     }
 
     fn child_mut(&mut self, k: &K) -> Option<&mut NodeRef<K, V>> {
-        self.children.find_mut(k)
+        self.children.get_mut(k)
     }
 
     fn get_or_add_child(&mut self, k: K) -> &mut NodeRef<K, V> {

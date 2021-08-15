@@ -23,6 +23,10 @@ impl<K, V> Record<K, V> {
         &self.val
     }
 
+    pub fn value_mut(&mut self) -> &mut V {
+        &mut self.val
+    }
+
     pub fn into_pair(self) -> (K, V) {
         (self.key, self.val)
     }

@@ -1,5 +1,4 @@
 use crate::record::Record;
-use core::ops::Index;
 use core::ops::Range;
 #[cfg(feature = "serde_derive")]
 use serde::{Deserialize, Serialize};

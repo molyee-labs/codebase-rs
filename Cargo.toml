@@ -7,7 +7,6 @@ members = [
     "convert",
     "timer",
     "uuid",
-    "trees",
     "merge",
     "aio",
     "merge_derive",
