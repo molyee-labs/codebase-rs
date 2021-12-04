@@ -3,18 +3,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 #[cfg_attr(feature = "serde_derive", derive(Deserialize, Serialize))]
-pub(crate) struct Record<K, V> {
+pub(crate) struct Rec<K, V> {
     key: K,
     val: V
 }
 
-impl<K, V> From<(K, V)> for Record<K, V> {
+impl<K, V> From<(K, V)> for Rec<K, V> {
     fn from((key, val): (K, V)) -> Self {
         Self { key, val }
     }
 }
 
-impl<K, V> Record<K, V> {
+impl<K, V> Rec<K, V> {
     pub fn key(&self) -> &K {
         &self.key
     }

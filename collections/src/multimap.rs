@@ -1,11 +1,11 @@
-use crate::record::Record;
+use crate::record::Rec;
 use core::ops::Range;
 #[cfg(feature = "serde_derive")]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 #[cfg_attr(feature = "serde_derive", derive(Deserialize, Serialize))]
-pub struct MultiMap<K, V>(Vec<Record<K, V>>);
+pub struct MultiMap<K, V>(Vec<Rec<K, V>>);
 
 impl<K, V> Default for MultiMap<K, V> {
     fn default() -> Self {
@@ -92,7 +92,7 @@ impl<'m, 'k, K: Ord, V> Iterator for Find<'m, 'k, K, V> {
 }
 
 pub struct FindAll<'m, K, V> {
-    records: &'m [Record<K, V>],
+    records: &'m [Rec<K, V>],
     index: usize,
 }
 

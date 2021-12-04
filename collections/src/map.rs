@@ -1,9 +1,9 @@
 use core::ops::{Index, IndexMut};
 use core::mem::swap;
 
-use crate::record::Record;
+use crate::record::Rec;
 
-pub struct Map<K, V>(Vec<Record<K, V>>);
+pub struct Map<K, V>(Vec<Rec<K, V>>);
 
 impl<K, V> Default for Map<K, V> {
     fn default() -> Self {
