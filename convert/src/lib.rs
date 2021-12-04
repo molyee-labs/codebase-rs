@@ -1,19 +1,7 @@
+mod transmute;
+pub use transmute::*;
+
 #[cfg(feature = "integer")]
-pub mod integer;
+mod integer;
 #[cfg(feature = "integer")]
 pub use integer::*;
-
-pub trait Transmute<T> {
-    fn transmute(self) -> T;
-}
-
-#[macro_export]
-macro_rules! impl_transmute {
-    ($t1:ty, $t2:ty) => {
-        impl Transmute<$t2> for $t1 {
-            fn transmute(self) -> $t2 {
-                unsafe { std::mem::transmute(self) }
-            }
-        }
-    };
-}
