@@ -3,12 +3,12 @@ mod map;
 mod trie;
 mod multimap;
 mod slicemap;
-mod dawg;
+mod list;
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+pub use map::Map;
+pub use trie::Trie;
+pub use multimap::MultiMap;
+pub use slicemap::{SliceMap, StringMap};
+pub use list::List;
+
+//mod dawg;
