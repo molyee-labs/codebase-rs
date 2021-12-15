@@ -1,6 +1,5 @@
 use shared::{Rc, RcCell, Ptr};
 use crate::map::Map;
-use core::ops::{DerefMut, Deref};
 
 pub trait Key: Ord { }
 
@@ -32,7 +31,7 @@ impl<K: Key, V> NodeRef<K, V> {
         Self(RcCell::new(node))
     }
 
-    pub fn insert<I>(&mut self, mut keys: I, mut v: V) -> Option<V>
+    pub fn insert<I>(&mut self, mut keys: I, v: V) -> Option<V>
     where I: Iterator<Item = K>
     {
         if let Some(k) = keys.next() {
