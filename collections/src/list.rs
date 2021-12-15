@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+#[derive(Debug)]
 pub struct List<T>(Option<Rc<Node<T>>>);
 
 impl<T> List<T> {
@@ -77,6 +78,7 @@ impl<'i, T> Iterator for Iter<'i, T> {
     }
 }
 
+#[derive(Debug)]
 struct Node<T> {
     value: T,
     tail: List<T>,
