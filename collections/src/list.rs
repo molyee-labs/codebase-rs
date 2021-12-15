@@ -53,6 +53,13 @@ impl<T> From<T> for List<T> {
     }
 }
 
+impl<T> From<&List<T>> for List<T> {
+    #[inline]
+    fn from(list: &List<T>) -> Self {
+        Self(list.0.clone())
+    }
+}
+
 pub struct Iter<'i, T> {
     node: Option<&'i Node<T>>,
 }
