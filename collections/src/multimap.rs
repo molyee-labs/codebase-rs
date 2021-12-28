@@ -8,16 +8,19 @@ use serde::{Deserialize, Serialize};
 pub struct MultiMap<K, V>(Vec<Rec<K, V>>);
 
 impl<K, V> Default for MultiMap<K, V> {
+    #[inline]
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl<K, V> MultiMap<K, V> {
-    pub fn new() -> Self {
+    #[inline]
+    pub const fn new() -> Self {
         Self(Vec::new())
     }
 
+    #[inline]
     pub fn len(&self) -> usize {
         self.0.len()
     }

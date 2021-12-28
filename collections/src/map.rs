@@ -1,10 +1,12 @@
-use core::ops::{Index, IndexMut};
-use core::mem::swap;
-use core::borrow::Borrow;
-
 use crate::record::Rec;
+use core::ops::{Index, IndexMut};
+use core::mem;
+use core::borrow::Borrow;
+#[cfg(feature = "serde_derive")]
+use serde::{Deserialize, Serialize};
 
 /// A map based on both [B-Tree] and [Vec]
+#[cfg_attr(feature = "serde_derive", derive(Deserialize, Serialize))]
 pub struct Map<K, V>(Vec<Rec<K, V>>);
 
 impl<K, V> Default for Map<K, V> {
@@ -53,7 +55,7 @@ impl<K, V> IndexMut<usize> for Map<K, V> {
 impl<K: Ord, V> Map<K, V> {
     pub fn insert(&mut self, k: K, mut v: V) -> Option<V> {
         match self.get_index(&k) {
-            Ok(i) => { swap(&mut v, &mut self[i]); Some(v) },
+            Ok(i) => { mem::swap(&mut v, &mut self[i]); Some(v) },
             Err(i) => { self.0.insert(i, (k, v).into()); None }
         }
     }
@@ -87,7 +89,8 @@ impl<K: Ord, V> Map<K, V> {
         }
     }
 
-    pub fn contains_key<Q: ?Sized>(&self, k: &Q) -> bool
+    #[inline]
+    pub fn contains<Q: ?Sized>(&self, k: &Q) -> bool
     where
         K: Borrow<Q>,
         Q: Ord,
@@ -110,6 +113,6 @@ impl<K: Ord, V> Map<K, V> {
         K: Borrow<Q>,
         Q: Ord,
     {
-        self.0.binary_search_by(|r| k.cmp(&r.key.borrow()))
+        self.0.binary_search_by(|r| r.key.borrow().cmp(k))
     }
 }
