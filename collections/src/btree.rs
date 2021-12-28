@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde_derive", derive(Deserialize, Serialize))]
 pub struct Map<K, V>(Vec<Rec<K, V>>);
 
+pub type Set<K> = Map<K, ()>;
+
 impl<K, V> Default for Map<K, V> {
     #[inline]
     fn default() -> Self {
