@@ -120,16 +120,7 @@ impl<K: Ord, V> Map<K, V> {
     }
 }
 
-pub(crate) struct InnerIter<'i, K, V>(slice::Iter<'i, Rec<K, V>>);
-
-impl<'i, K, V> Iterator for InnerIter<'i, K, V> {
-    type Item = &'i Rec<K, V>;
-
-    #[inline]
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next()
-    }
-}
+pub(crate) type InnerIter<'i, K, V> = slice::Iter<'i, Rec<K, V>>;
 
 pub struct Iter<'i, K, V>(InnerIter<'i, K, V>);
 
@@ -167,7 +158,7 @@ impl<'i, K, V> Iterator for Values<'i, K, V> {
 impl<K, V> Map<K, V> {
     #[inline]
     pub(crate) fn inner_iter(&self) -> InnerIter<'_, K, V> {
-        InnerIter(self.0.iter())
+        self.0.iter()
     }
 
     #[inline]
