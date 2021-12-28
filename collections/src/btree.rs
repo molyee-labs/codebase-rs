@@ -40,7 +40,7 @@ impl<K, V> Map<K, V> {
     }
 }
 
-impl<K, V> Index<usize> for Map<K, V> {
+/*impl<K, V> Index<usize> for Map<K, V> {
     type Output = V;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -52,12 +52,12 @@ impl<K, V> IndexMut<usize> for Map<K, V> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         self.0[index].value_mut()
     }
-}
+}*/
 
 impl<K: Ord, V> Map<K, V> {
     pub fn insert(&mut self, k: K, mut v: V) -> Option<V> {
         match self.get_index(&k) {
-            Ok(i) => { mem::swap(&mut v, &mut self[i]); Some(v) },
+            Ok(i) => { mem::swap(&mut v, &mut self.0[i].val); Some(v) },
             Err(i) => { self.0.insert(i, (k, v).into()); None }
         }
     }
@@ -67,7 +67,8 @@ impl<K: Ord, V> Map<K, V> {
         K: Borrow<Q>,
         Q: Ord,
     {
-        self.get_index(k).ok().map(|i| &self[i])
+        let i = self.get_index(k).ok()?;
+        Some(&self.0[i].val)
     }
 
     pub fn get_mut<Q: ?Sized>(&mut self, k: &Q) -> Option<&mut V>
@@ -76,17 +77,17 @@ impl<K: Ord, V> Map<K, V> {
         Q: Ord,
     {
         let i = self.get_index(k).ok()?;
-        Some(&mut self[i])
+        Some(&mut self.0[i].val)
     }
 
     pub fn get_or_create_mut<F>(&mut self, k: K, new: F) -> &mut V
     where F: FnOnce() -> V
     {
         match self.get_index(&k) {
-            Ok(i) => &mut self[i],
+            Ok(i) => &mut self.0[i].val,
             Err(i) => {
                 self.0.insert(i, (k, new()).into());
-                &mut self[i]
+                &mut self.0[i].val
             }
         }
     }
