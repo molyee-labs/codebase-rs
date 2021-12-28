@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug)]
 #[cfg_attr(feature = "serde_derive", derive(Deserialize, Serialize))]
 pub(crate) struct Rec<K, V> {
-    key: K,
-    val: V
+    pub(crate) key: K,
+    pub(crate) val: V
 }
 
 impl<K, V> From<(K, V)> for Rec<K, V> {

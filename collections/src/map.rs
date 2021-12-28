@@ -1,25 +1,36 @@
 use core::ops::{Index, IndexMut};
 use core::mem::swap;
+use core::borrow::Borrow;
 
 use crate::record::Rec;
 
+/// A map based on both [B-Tree] and [Vec]
 pub struct Map<K, V>(Vec<Rec<K, V>>);
 
 impl<K, V> Default for Map<K, V> {
+    #[inline]
     fn default() -> Self {
         Map::new()
     }
 }
 
 impl<K, V> Map<K, V> {
-    pub fn new() -> Self {
+    #[inline]
+    pub const fn new() -> Self {
         Self(Vec::new())
     }
+
+    #[inline]
+    pub fn clear(&mut self) {
+        self.0.clear()
+    }
     
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
+    #[inline]
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -47,11 +58,19 @@ impl<K: Ord, V> Map<K, V> {
         }
     }
 
-    pub fn get(&self, k: &K) -> Option<&V> {
+    pub fn get<Q: ?Sized>(&self, k: &Q) -> Option<&V>
+    where
+        K: Borrow<Q>,
+        Q: Ord,
+    {
         self.get_index(k).ok().map(|i| &self[i])
     }
 
-    pub fn get_mut(&mut self, k: &K) -> Option<&mut V> {
+    pub fn get_mut<Q: ?Sized>(&mut self, k: &Q) -> Option<&mut V>
+    where
+        K: Borrow<Q>,
+        Q: Ord,
+    {
         let i = self.get_index(k).ok()?;
         Some(&mut self[i])
     }
@@ -68,12 +87,29 @@ impl<K: Ord, V> Map<K, V> {
         }
     }
 
-    pub fn remove(&mut self, k: &K) -> Option<V> {
-        let i = self.get_index(k).ok()?;
-        Some(self.0.remove(i).into_pair().1)
+    pub fn contains_key<Q: ?Sized>(&self, k: &Q) -> bool
+    where
+        K: Borrow<Q>,
+        Q: Ord,
+    {
+        self.get_index(k).is_ok()
     }
 
-    fn get_index(&self, k: &K) -> Result<usize, usize> {
-        self.0.binary_search_by(|r| k.cmp(r.key()))
+    pub fn remove<Q: ?Sized>(&mut self, k: &Q) -> Option<V>
+    where
+        K: Borrow<Q>,
+        Q: Ord,
+    {
+        let i = self.get_index(k).ok()?;
+        Some(self.0.remove(i).val)
+    }
+
+    #[inline]
+    fn get_index<Q: ?Sized>(&self, k: &Q) -> Result<usize, usize>
+    where
+        K: Borrow<Q>,
+        Q: Ord,
+    {
+        self.0.binary_search_by(|r| k.cmp(&r.key.borrow()))
     }
 }
