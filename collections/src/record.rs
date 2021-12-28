@@ -27,6 +27,10 @@ impl<K, V> Rec<K, V> {
         &mut self.val
     }
 
+    pub fn as_pair(&self) -> (&K, &V) {
+        (&self.key, &self.val)
+    }
+
     pub fn into_pair(self) -> (K, V) {
         (self.key, self.val)
     }

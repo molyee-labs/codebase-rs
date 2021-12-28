@@ -118,3 +118,22 @@ impl<K: Ord, V> Map<K, V> {
         self.0.binary_search_by(|r| r.key.borrow().cmp(k))
     }
 }
+
+pub struct Iter<'i, K, V> {
+    map: &'i Map<K, V>,
+    index: usize,
+}
+
+impl<'i, K, V> Iterator for Iter<'i, K, V> {
+    type Item = (&'i K, &'i V);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let index = self.index;
+        if index < self.map.len() {
+            self.index = index + 1;
+            Some(self.map.0[index].as_pair())
+        } else {
+            None
+        }
+    }
+}
