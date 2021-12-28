@@ -1,5 +1,5 @@
 use shared::{RcCell, Ptr};
-use crate::map::Map;
+use crate::btree::Map;
 
 pub trait Key: Ord { }
 
