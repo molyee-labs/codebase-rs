@@ -1,7 +1,7 @@
 use crate::record::Rec;
-use core::ops::{Index, IndexMut};
 use core::mem;
 use core::borrow::Borrow;
+use core::slice;
 #[cfg(feature = "serde_derive")]
 use serde::{Deserialize, Serialize};
 
@@ -120,21 +120,68 @@ impl<K: Ord, V> Map<K, V> {
     }
 }
 
-pub struct Iter<'i, K, V> {
-    map: &'i Map<K, V>,
-    index: usize,
+pub(crate) struct InnerIter<'i, K, V>(slice::Iter<'i, Rec<K, V>>);
+
+impl<'i, K, V> Iterator for InnerIter<'i, K, V> {
+    type Item = &'i Rec<K, V>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
 }
+
+pub struct Iter<'i, K, V>(InnerIter<'i, K, V>);
 
 impl<'i, K, V> Iterator for Iter<'i, K, V> {
     type Item = (&'i K, &'i V);
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        let index = self.index;
-        if index < self.map.len() {
-            self.index = index + 1;
-            Some(self.map.0[index].as_pair())
-        } else {
-            None
-        }
+        self.0.next().map(Rec::as_pair)
+    }
+}
+
+pub struct Keys<'i, K, V>(InnerIter<'i, K, V>);
+
+impl<'i, K, V> Iterator for Keys<'i, K, V> {
+    type Item = &'i K;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(Rec::key)        
+    }
+}
+
+pub struct Values<'i, K, V>(InnerIter<'i, K, V>);
+
+impl<'i, K, V> Iterator for Values<'i, K, V> {
+    type Item = &'i V;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(Rec::value)        
+    }
+}
+
+impl<K, V> Map<K, V> {
+    #[inline]
+    pub(crate) fn inner_iter(&self) -> InnerIter<'_, K, V> {
+        InnerIter(self.0.iter())
+    }
+
+    #[inline]
+    pub fn iter(&self) -> Iter<'_, K, V> {
+        Iter(self.inner_iter())
+    }
+
+    #[inline]
+    pub fn keys(&self) -> Keys<'_, K, V> {
+        Keys(self.inner_iter())
+    }
+
+    #[inline]
+    pub fn values(&self) -> Values<'_, K, V> {
+        Values(self.inner_iter())
     }
 }
