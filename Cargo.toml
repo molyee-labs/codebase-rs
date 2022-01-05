@@ -14,5 +14,6 @@ members = [
     "collections",
     "url",
     "email",
-    "verify"
+    "verify",
+    "time"
 ]
