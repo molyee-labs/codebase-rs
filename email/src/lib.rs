@@ -3,14 +3,6 @@ use core::fmt::{self, Debug, Display};
 
 pub struct Email<S, V = Verifier>(S, V);
 
-impl<S: ToOwned, V: Copy> ToOwned for Email<S, V> {
-    type Owned = Email<S::Owned, V>;
-    #[inline]
-    fn to_owned(&self) -> Self::Owned {
-        Self(self.0.to_owned(), self.1)
-    }
-}
-
 impl<S: Debug> Debug for Email<S> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
