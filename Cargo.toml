@@ -11,5 +11,8 @@ members = [
     "aio",
     "merge_derive",
     "dawg",
-    "collections"
+    "collections",
+    "url",
+    "email",
+    "verify"
 ]
