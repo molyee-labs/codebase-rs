@@ -1,1 +1,1 @@
-pub use url::*;
+pub use url::Url;
