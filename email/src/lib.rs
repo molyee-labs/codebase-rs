@@ -1,7 +1,7 @@
 use verify::*;
 use core::fmt::{self, Debug, Display};
 
-pub struct Email<S, V = Verifier>(S, V);
+pub struct Email<S = String, V = Verifier>(S, V);
 
 impl<S: Debug> Debug for Email<S> {
     #[inline]
