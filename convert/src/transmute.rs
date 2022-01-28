@@ -6,8 +6,9 @@ pub trait Transmute<T> {
 macro_rules! impl_transmute {
     ($t1:ty, $t2:ty) => {
         impl Transmute<$t2> for $t1 {
+            #[inline]
             fn transmute(self) -> $t2 {
-                unsafe { std::mem::transmute(self) }
+                unsafe { core::mem::transmute(self) }
             }
         }
     };
