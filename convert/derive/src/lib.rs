@@ -12,6 +12,13 @@ pub fn hello_macro_derive(input: TokenStream) -> TokenStream {
 
 fn impl_into_any(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
-    let gen = quote! { impl convert::any::IntoAny for #name { } };
+    let gen = quote! {
+        impl ::convert::any::IntoAny for #name {
+            #[inline]
+            fn into_any(self: Box<Self>) -> Box<dyn ::core::any::Any> {
+                self
+            }
+        }
+    };
     gen.into()
 }
