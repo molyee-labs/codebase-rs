@@ -6,8 +6,11 @@ edition = "2018"
 publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+convert_derive = { path = "derive", optional = true }
 
 [features]
-default = ["integer", "any"]
+default = ["integer", "any", "derive"]
 integer = []
 any = []
+derive = ["convert_derive"]

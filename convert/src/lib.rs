@@ -2,12 +2,10 @@ mod transmute;
 pub use transmute::*;
 
 #[cfg(feature = "integer")]
-mod integer;
-#[cfg(feature = "integer")]
-pub use integer::*;
+pub mod integer;
 
 #[cfg(feature = "any")]
-mod any;
-#[cfg(feature = "any")]
-pub use any::*;
+pub mod any;
 
+#[cfg(feature = "derive")]
+pub use convert_derive::*;
