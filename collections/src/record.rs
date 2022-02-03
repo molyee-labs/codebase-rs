@@ -34,4 +34,12 @@ impl<K, V> Rec<K, V> {
     pub fn into_pair(self) -> (K, V) {
         (self.key, self.val)
     }
+
+    pub fn into_key(self) -> K {
+        self.key
+    }
+
+    pub fn into_value(self) -> V {
+        self.val
+    }
 }
