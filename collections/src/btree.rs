@@ -174,6 +174,11 @@ impl<K, V> Map<K, V> {
     pub fn values(&self) -> Values<'_, K, V> {
         Values(self.inner_iter())
     }
+
+    #[inline]
+    pub fn into_vec(self) -> Vec<(K, V)> {
+        self.0.into_iter().map(Rec::into_pair).collect()
+    }
 }
 
 pub struct MapIntoIter<K, V>(vec::IntoIter<Rec<K, V>>);
@@ -270,6 +275,11 @@ impl<K> Set<K> {
     #[inline]
     pub fn iter(&self) -> SetIter<'_, K> {
         SetIter(self.inner_iter())
+    }
+
+    #[inline]
+    pub fn into_vec(self) -> Vec<K> {
+        self.into_iter().collect()
     }
 }
 
