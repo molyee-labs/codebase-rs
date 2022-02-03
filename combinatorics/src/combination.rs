@@ -1,10 +1,5 @@
 use std::marker::PhantomData;
 
-pub trait Combine {
-    type Item;
-    fn combine(&mut self, )
-}
-
 pub struct Combinations<T> {
     _mark: PhantomData<T>,
 }

@@ -5,6 +5,7 @@ members = [
     "pool",
     "shared",
     "convert",
+    "combinatorics",
     "timer",
     "uuid",
     "merge",
